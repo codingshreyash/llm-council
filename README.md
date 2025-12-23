@@ -2,7 +2,9 @@
 
 ![llmcouncil](header.jpg)
 
-The idea of this repo is that instead of asking a question to your favorite LLM provider (e.g. OpenAI GPT 5.1, Google Gemini 3.0 Pro, Anthropic Claude Sonnet 4.5, xAI Grok 4, eg.c), you can group them into your "LLM Council". This repo is a simple, local web app that essentially looks like ChatGPT except it uses OpenRouter to send your query to multiple LLMs, it then asks them to review and rank each other's work, and finally a Chairman LLM produces the final response.
+> **Note:** This is a fork/modification of the original [LLM Council](https://github.com/karpathy/llm-council) project by [Andrej Karpathy](https://github.com/karpathy). The original project used OpenRouter to access multiple LLM providers. This version has been modified to use direct API access to OpenAI, Anthropic, and Google (Gemini) instead.
+
+The idea of this repo is that instead of asking a question to your favorite LLM provider (e.g. OpenAI GPT-4o, Google Gemini, Anthropic Claude Sonnet, etc.), you can group them into your "LLM Council". This repo is a simple, local web app that essentially looks like ChatGPT except it uses direct API access to send your query to multiple LLMs, it then asks them to review and rank each other's work, and finally a Chairman LLM produces the final response.
 
 In a bit more detail, here is what happens when you submit a query:
 
@@ -10,9 +12,16 @@ In a bit more detail, here is what happens when you submit a query:
 2. **Stage 2: Review**. Each individual LLM is given the responses of the other LLMs. Under the hood, the LLM identities are anonymized so that the LLM can't play favorites when judging their outputs. The LLM is asked to rank them in accuracy and insight.
 3. **Stage 3: Final response**. The designated Chairman of the LLM Council takes all of the model's responses and compiles them into a single final answer that is presented to the user.
 
-## Vibe Code Alert
+## Credits
 
-This project was 99% vibe coded as a fun Saturday hack because I wanted to explore and evaluate a number of LLMs side by side in the process of [reading books together with LLMs](https://x.com/karpathy/status/1990577951671509438). It's nice and useful to see multiple responses side by side, and also the cross-opinions of all LLMs on each other's outputs. I'm not going to support it in any way, it's provided here as is for other people's inspiration and I don't intend to improve it. Code is ephemeral now and libraries are over, ask your LLM to change it in whatever way you like.
+This project is based on the original [LLM Council](https://github.com/karpathy/llm-council) project by [Andrej Karpathy](https://github.com/karpathy). The original project was 99% vibe coded as a fun Saturday hack to explore and evaluate a number of LLMs side by side in the process of [reading books together with LLMs](https://x.com/karpathy/status/1990577951671509438). This fork modifies the original to use direct API access instead of OpenRouter.
+
+## Modifications
+
+This version has been modified to:
+- Use direct API access to OpenAI, Anthropic, and Google (Gemini) instead of OpenRouter
+- Support provider-specific API keys and model identifiers
+- Maintain the same 3-stage council functionality and UI
 
 ## Setup
 
@@ -32,30 +41,39 @@ npm install
 cd ..
 ```
 
-### 2. Configure API Key
+### 2. Configure API Keys
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root (you can copy from `.env.example`):
 
 ```bash
-OPENROUTER_API_KEY=sk-or-v1-...
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+GOOGLE_API_KEY=...
 ```
 
-Get your API key at [openrouter.ai](https://openrouter.ai/). Make sure to purchase the credits you need, or sign up for automatic top up.
+Get your API keys:
+- **OpenAI:** [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+- **Anthropic:** [console.anthropic.com](https://console.anthropic.com/)
+- **Google:** [makersuite.google.com/app/apikey](https://makersuite.google.com/app/apikey)
 
 ### 3. Configure Models (Optional)
 
-Edit `backend/config.py` to customize the council:
+Edit `backend/config.py` to customize the council. Model identifiers use the format `"provider:model_name"`:
 
 ```python
 COUNCIL_MODELS = [
-    "openai/gpt-5.1",
-    "google/gemini-3-pro-preview",
-    "anthropic/claude-sonnet-4.5",
-    "x-ai/grok-4",
+    "openai:gpt-4o",
+    "google:gemini-2.0-flash-exp",
+    "anthropic:claude-3-5-sonnet-20241022",
 ]
 
-CHAIRMAN_MODEL = "google/gemini-3-pro-preview"
+CHAIRMAN_MODEL = "google:gemini-2.0-flash-exp"
 ```
+
+Available providers:
+- `openai:` - OpenAI models (e.g., `gpt-4o`, `gpt-4-turbo`)
+- `anthropic:` - Anthropic models (e.g., `claude-3-5-sonnet-20241022`, `claude-sonnet-4-20250514`)
+- `google:` - Google Gemini models (e.g., `gemini-2.0-flash-exp`, `gemini-1.5-pro`)
 
 ## Running the Application
 
@@ -81,7 +99,7 @@ Then open http://localhost:5173 in your browser.
 
 ## Tech Stack
 
-- **Backend:** FastAPI (Python 3.10+), async httpx, OpenRouter API
+- **Backend:** FastAPI (Python 3.10+), direct API clients for OpenAI, Anthropic, and Google
 - **Frontend:** React + Vite, react-markdown for rendering
 - **Storage:** JSON files in `data/conversations/`
 - **Package Management:** uv for Python, npm for JavaScript
